@@ -1,0 +1,259 @@
+# This project uses a graphical user interface therefore the tkinter library must be installed before running
+# https://docs.python.org/3/library/tkinter.html
+# https://www.geeksforgeeks.org/how-to-install-tkinter-on-macos/
+# https://www.activestate.com/resources/quick-reads/how-to-install-tkinter-in-windows/
+
+import math
+from tkinter import *
+from tkinter import ttk
+
+
+# Function is activated when the investment button is clicked on the menubar
+# This function calls another function to remove all the widgets from the window
+# and then grids the necessary widgets for calculating return on investments to the window.
+
+def menu_to_invest():
+    print("Moving to Investment Window")
+
+    forget_invest_window()
+    forget_bond_window()
+
+    lbl_invest_money.grid(row=0, column=0, pady=3, padx=3)
+    entry_invest_money.grid(row=0, column=1, columnspan=2, pady=3, padx=3)
+    lbl_interest.grid(row=1, column=0, pady=3, padx=3)
+    entry_interest.grid(row=1, column=1, pady=3, columnspan=2, padx=3)
+    lbl_invest_years.grid(row=2, column=0, pady=3, padx=3)
+    entry_invest_years.grid(row=2, column=1, pady=3, padx=3, columnspan=2)
+    check_compound.grid(row=3, column=0, padx=3, pady=3, columnspan=2)
+    check_simple.grid(row=3, column=2, padx=3, pady=3, columnspan=2)
+    btn_calculate_invest.grid(row=4, column=1, pady=3, columnspan=2, padx=3)
+    lbl_frame_invest.grid(row=7, column=0, columnspan=3, sticky=E)
+    lbl_sum_invest.grid(row=0, column=0, columnspan=2, padx=3, pady=3)
+
+    lbl_frame_invest.configure(text="Return on Investment")
+
+
+# Function is activated when the bond button is clicked on the menubar
+# This function calls another function to remove all the widgets from the window
+# and then grids the necessary widgets for bond returns to the window.
+
+def menu_to_bond():
+    print("Moving to Bond Window")
+
+    forget_bond_window()
+    forget_invest_window()
+
+    lbl_bond_value.grid(row=0, column=0, pady=3, padx=3)
+    entry_bond_value.grid(row=0, column=1, pady=3, columnspan=2, padx=3)
+    lbl_bond_interest.grid(row=1, column=0, pady=3, padx=3)
+    entry_bond_interest.grid(row=1, column=1, pady=3, columnspan=2, padx=3)
+    lbl_bond_months.grid(row=2, column=0, pady=3, padx=3)
+    entry_bond_months.grid(row=2, column=1, pady=3, padx=3, columnspan=2)
+
+    btn_calculate_bond.grid(row=3, column=1, pady=3, padx=3, columnspan=3)
+    lbl_frame_invest.grid(row=7, column=0, columnspan=3, padx=3)
+
+    lbl_frame_invest.configure(text="Return on Bond")
+
+
+# Forgets all widgets that have been placed in the main window when calculating a bond
+# Used when switching between tabs to the investment window
+
+def forget_bond_window():
+    lbl_bond_value.grid_forget()
+    entry_bond_value.grid_forget()
+    lbl_bond_interest.grid_forget()
+    entry_bond_interest.grid_forget()
+    lbl_bond_months.grid_forget()
+    entry_bond_months.grid_forget()
+    btn_calculate_bond.grid_forget()
+    lbl_sum_invest.configure(text="")
+
+
+# Forgets all widgets that have been placed in the main window when calculating an investment
+# Used when switching between tabs to the bond window
+
+def forget_invest_window():
+    lbl_invest_money.grid_forget()
+    entry_invest_money.grid_forget()
+    lbl_interest.grid_forget()
+    entry_interest.grid_forget()
+    lbl_invest_years.grid_forget()
+    entry_invest_years.grid_forget()
+    check_compound.grid_forget()
+    check_simple.grid_forget()
+    btn_calculate_invest.grid_forget()
+    lbl_sum_invest.configure(text="")
+
+
+# Function is performed when the calculate investment button is clicked
+# Takes and validates all input from the entry fields and then calculates the relevant return on investment
+# Outputs this value to the label within the labelframe
+
+def investment_clicked():
+
+    money = entry_invest_money.get()
+    interest_rate = entry_interest.get()
+    years = entry_invest_years.get()
+    is_compound = compound.get()
+    is_simple = simple.get()
+
+    try:
+        money = float(entry_invest_money.get())
+        interest_rate = float(entry_interest.get())
+        years = int(entry_invest_years.get())
+
+        # If interest rate is greater than 100 or less than 0 display error message
+
+        if (interest_rate < 0) or (interest_rate > 100):
+            error_pop_up(1)
+
+        # If simple interest is ticked then calculate simple return
+
+        elif (is_simple == 1) and (is_compound == 0):
+
+            r = float(interest_rate) / 100
+
+            return_on_invest = float(money) * (1 + r * int(years))
+            lbl_sum_invest.configure(text=f"£{return_on_invest}")
+            clear_investment_fields()
+
+        # If only compound is ticked then calculate compound return
+
+        elif (is_simple == 0) and (is_compound == 1):
+
+            r = float(interest_rate) / 100
+
+            return_on_invest = float(money) * (1 + r) ** float(years)
+            lbl_sum_invest.configure(text=f"£{round(return_on_invest, 2)}")
+            clear_investment_fields()
+
+        else:
+            error_pop_up(2)
+
+    except ValueError:
+        error_pop_up(0)
+        print("One or more types not valid")
+
+
+# Function is performed when the calculate bond button is pressed.
+# Takes the input and validates that it is of the correct data type
+# before calculating the repayment value of the bond and displaying.
+
+def bond_clicked():
+    """ present value must be number
+        Interest rate must be a number between 0 - 100
+        number of months they plan to repay the bond must be number """
+
+    present_value = entry_bond_value.get()
+    bond_interest = entry_bond_interest.get()
+    months = entry_bond_months.get()
+
+    try:
+        present_value = float(present_value)
+        bond_interest = float(bond_interest)
+        months = int(months)
+
+        if bond_interest > 100 or bond_interest < 0:
+            error_pop_up(1)
+
+        else:
+            monthly_ir = (bond_interest / 100) / 12
+            repayment = (monthly_ir * present_value) / (1 - (1 + monthly_ir) ** (-months))
+            lbl_sum_invest.configure(text=f"£{round(repayment, 2)}")
+            print("Calculating bond")
+
+    except ValueError:
+        print("One or more values not of correct type")
+        error_pop_up(0)
+
+
+# Clears all data from entry fields and checkboxes used when calculating investments
+
+def clear_investment_fields():
+    entry_invest_money.delete(0, END)
+    entry_interest.delete(0, END)
+    entry_invest_years.delete(0, END)
+    compound.set(0)
+    simple.set(0)
+
+
+# Creates a top layer window displaying an error message
+
+def error_pop_up(error_ind):
+    errors_list = [
+        "One or more types invalid",
+        "Interest Rate must be a number between 0 - 100",
+        "Only simple or compound must be ticked"]
+
+    top = Toplevel(window)
+    top.geometry("300x50")
+    top.title("Oops!")
+
+    error_lbl = Label(top, text=errors_list[error_ind])
+    error_lbl.grid(row=2, column=2, columnspan=2)
+
+
+# ----------------------------------- Main Window -----------------------------------
+
+window = Tk()
+window.geometry("250x225")
+window.title("Finance Calculator")
+window.resizable(False, False)
+
+menubar = Menu(window)
+menubar.add_command(label="Calculate Investment", command=menu_to_invest)
+menubar.add_command(label="Calculate Bond", command=menu_to_bond)
+
+window.config(menu=menubar)
+
+# ----------------------------------- Investment Window -----------------------------
+
+# CREATING WIDGETS
+lbl_invest_money = Label(window, text="Money to deposit")
+entry_invest_money = Entry(window)
+lbl_interest = Label(window, text="Interest Rate")
+entry_interest = Entry(window)
+lbl_invest_years = Label(window, text="Amount of Years")
+entry_invest_years = Entry(window)
+btn_calculate_invest = Button(window, text="Calculate Investment", command=investment_clicked)
+lbl_frame_invest = LabelFrame(window, text="Return on Investment", width=300, height=100)
+lbl_sum_invest = Label(lbl_frame_invest, text="", height=3, width=30)
+
+# Define integer variables for the tick boxes and assign these variables to the checkbutton
+compound = IntVar()
+check_compound = Checkbutton(window, text="Compound", variable=compound)
+simple = IntVar()
+check_simple = Checkbutton(window, text="Simple", variable=simple)
+
+# PLACING WIDGETS
+
+lbl_invest_money.grid(row=0, column=0, pady=3, padx=3)
+entry_invest_money.grid(row=0, column=1, columnspan=2, pady=3, padx=3)
+lbl_interest.grid(row=1, column=0, pady=3, padx=3)
+entry_interest.grid(row=1, column=1, pady=3, columnspan=2, padx=3)
+lbl_invest_years.grid(row=2, column=0, pady=3, padx=3)
+entry_invest_years.grid(row=2, column=1, pady=3, padx=3, columnspan=2)
+check_compound.grid(row=3, column=0, padx=3, pady=3, columnspan=2)
+check_simple.grid(row=3, column=2, padx=3, pady=3, columnspan=2)
+
+btn_calculate_invest.grid(row=4, column=1, pady=3, columnspan=2, padx=3)
+
+lbl_frame_invest.grid(row=7, column=0, columnspan=3, sticky=E)
+lbl_sum_invest.grid(row=0, column=0, columnspan=2, padx=3, pady=3)
+# ----------------------------------- Bond Window -----------------------------------
+
+# CREATING WIDGETS
+lbl_bond_value = Label(window, text="Present Value")
+entry_bond_value = Entry(window)
+lbl_bond_interest = Label(window, text="Interest Rate")
+entry_bond_interest = Entry(window)
+lbl_bond_months = Label(window, text="Months")
+entry_bond_months = Entry(window)
+
+btn_calculate_bond = Button(window, text="Calculate Bond", command=bond_clicked)
+# -----------------------------------------------------------------------------------
+
+# RUN GUI
+
+window.mainloop()
